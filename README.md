@@ -20,12 +20,15 @@ repo's README API section).
 
 ## What it does
 
-Every `--interval` seconds (default 20), fetches one random image from
-`libretro-artwork-api`'s `/random` endpoint, fits it to the screen
-(letterboxed on black, preserving aspect ratio - box art proportions
-vary a lot, from tall SNES covers to wide arcade marquees), and pushes
-it to the display. Skips an immediate repeat of the same image. A fetch
-or display failure just logs and retries next tick - never crashes the
+Every `--interval` seconds (default 20), fetches a random image from
+`libretro-artwork-api`'s `/random` endpoint whose own pixel shape
+matches the screen's `--orientation` (a wide image discarded on a
+portrait screen, and vice versa - up to `MAX_ORIENTATION_RETRIES` tries;
+box art skews heavily portrait, so a landscape screen restricted to a
+narrow `--type` may struggle to find a match), fits it to the screen
+(letterboxed on black, preserving aspect ratio), and pushes it to the
+display. Skips an immediate repeat of the same image. A fetch or
+display failure just logs and retries next tick - never crashes the
 loop.
 
 ## Hardware / display driver

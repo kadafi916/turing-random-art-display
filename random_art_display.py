@@ -60,6 +60,40 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
     return image, f"{picked_type}: {repo}/{urllib.parse.unquote(filename)}"
 
 
+MAX_ORIENTATION_RETRIES = 8
+
+
+def shape_matches(image: Image.Image, want_landscape: bool) -> bool:
+    """Compares the image's own pixel shape (not the screen's physical
+    mount) against what's wanted - a wide image on a portrait screen (or
+    vice versa) still displays fine via render_fit()'s letterboxing, but
+    looks small and wastes most of the screen. An exactly square image
+    matches either orientation, since there's no wrong choice for it."""
+    if image.width == image.height:
+        return True
+    return (image.width > image.height) == want_landscape
+
+
+def fetch_matching(server: str, system: str, media_type: str, timeout: float, want_landscape: bool):
+    """Like fetch_random(), but discards a shape-mismatched image and
+    tries again, up to MAX_ORIENTATION_RETRIES times. Box art in
+    particular skews heavily portrait (mimics a physical cover), so a
+    landscape screen restricted to a narrow --type could plausibly
+    exhaust every retry - that's reported the same way a plain fetch
+    failure is, not treated as an error, since it isn't one: nothing
+    matching was available yet, not that something went wrong."""
+    for attempt in range(1, MAX_ORIENTATION_RETRIES + 1):
+        image, label = fetch_random(server, system, media_type, timeout)
+        if image is None:
+            return None, label
+        if shape_matches(image, want_landscape):
+            return image, label
+        logger.debug("Wrong shape for this orientation (%s), retrying (%d/%d)",
+                     label, attempt, MAX_ORIENTATION_RETRIES)
+    return None, f"no {'landscape' if want_landscape else 'portrait'}-shaped image found " \
+                 f"in {MAX_ORIENTATION_RETRIES} tries"
+
+
 def render_fit(image: Image.Image, width: int, height: int) -> Image.Image:
     """Box art aspect ratios vary a lot (tall SNES covers, wide arcade
     marquees, ...) - fit the whole image within the screen, preserving
@@ -105,10 +139,13 @@ def main():
     width, height = comm.get_width(), comm.get_height()
     logger.info("Display ready: %dx%d", width, height)
 
+    want_landscape = args.orientation in ("landscape", "reverse_landscape")
+
     last_label = None
     try:
         while True:
-            image, label = fetch_random(args.server, args.system, args.type, args.fetch_timeout)
+            image, label = fetch_matching(args.server, args.system, args.type,
+                                          args.fetch_timeout, want_landscape)
             if image is None:
                 logger.warning("Fetch failed (%s), retrying in %.0fs", label, args.interval)
             elif label == last_label:
