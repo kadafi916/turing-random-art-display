@@ -30,7 +30,7 @@ from turing_lcd.log import logger
 BG = (0, 0, 0)
 
 
-def fetch_random(server: str, system: str, media_type: str, timeout: float):
+def fetch_random(server: str, system: str, exclude_system: str, media_type: str, timeout: float):
     """Returns (PIL.Image, label) or (None, reason) on failure. label is
     "type: system/filename" from the response headers - only used for
     logging and same-image dedup, the server doesn't send a game title.
@@ -39,6 +39,8 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
     params = {"type": media_type}
     if system:
         params["system"] = system
+    if exclude_system:
+        params["exclude_system"] = exclude_system
     url = f"{server.rstrip('/')}/random?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": "random-art-display"})
     try:
@@ -84,7 +86,7 @@ def shape_matches(image: Image.Image, want_landscape: bool, allow_square: bool =
     return (image.width > image.height) == want_landscape
 
 
-def fetch_matching(server: str, system: str, media_type: str, timeout: float,
+def fetch_matching(server: str, system: str, exclude_system: str, media_type: str, timeout: float,
                     want_landscape: bool, allow_square: bool = True):
     """Like fetch_random(), but discards a shape-mismatched image and
     tries again, up to MAX_ORIENTATION_RETRIES times. Box art in
@@ -94,7 +96,7 @@ def fetch_matching(server: str, system: str, media_type: str, timeout: float,
     failure is, not treated as an error, since it isn't one: nothing
     matching was available yet, not that something went wrong."""
     for attempt in range(1, MAX_ORIENTATION_RETRIES + 1):
-        image, label = fetch_random(server, system, media_type, timeout)
+        image, label = fetch_random(server, system, exclude_system, media_type, timeout)
         if image is None:
             return None, label
         if shape_matches(image, want_landscape, allow_square):
@@ -127,7 +129,13 @@ def main():
     ap.add_argument("--interval", type=float, default=20.0,
                      help="seconds between images (default: %(default)s)")
     ap.add_argument("--system", default="",
-                     help="restrict to one SYSTEM_MAP alias (default: any indexed system)")
+                     help="one or more SYSTEM_MAP aliases, comma-separated ('snes,n64') - "
+                          "an include list (default: any indexed system)")
+    ap.add_argument("--exclude-system", default="",
+                     help="one or more SYSTEM_MAP aliases, comma-separated - removes those "
+                          "systems from the pool instead ('arcade' for everything except "
+                          "arcade); combinable with --system, passed straight through to "
+                          "the server, which validates it")
     ap.add_argument("--type", default="boxart",
                      help="boxart|snap|title|logo, a comma-separated list to pick "
                           "randomly among ('boxart,snap'), or 'random' for any of the "
@@ -159,8 +167,8 @@ def main():
     last_label = None
     try:
         while True:
-            image, label = fetch_matching(args.server, args.system, args.type, args.fetch_timeout,
-                                          want_landscape, args.allow_square_images)
+            image, label = fetch_matching(args.server, args.system, args.exclude_system, args.type,
+                                          args.fetch_timeout, want_landscape, args.allow_square_images)
             if image is None:
                 logger.warning("Fetch failed (%s), retrying in %.0fs", label, args.interval)
             elif label == last_label:
