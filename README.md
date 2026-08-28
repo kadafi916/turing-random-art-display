@@ -81,9 +81,10 @@ you want one.
                     randomly among those, or "random" for any of the four (default: boxart)
 --orientation       landscape|portrait|reverse_landscape|reverse_portrait (default: landscape)
 --allow-square-images / --no-allow-square-images
-                    whether an exactly-square image counts as matching either
-                    orientation, or gets rejected/retried like any other shape
-                    mismatch (default: allow)
+                    whether a square-ish image (long/short side ratio under
+                    SQUARE_ISH_RATIO, 1.1 by default - not just exactly equal
+                    dimensions) counts as matching either orientation, or gets
+                    rejected/retried like any other shape mismatch (default: allow)
 --port PORT          serial port (default: AUTO)
 --brightness 0-100    (default: 50)
 --fetch-timeout SECONDS  HTTP timeout (default: 8)

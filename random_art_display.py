@@ -63,15 +63,23 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
 MAX_ORIENTATION_RETRIES = 8
 
 
+SQUARE_ISH_RATIO = 1.1  # long side / short side below this counts as "square" too
+
+
 def shape_matches(image: Image.Image, want_landscape: bool, allow_square: bool = True) -> bool:
     """Compares the image's own pixel shape (not the screen's physical
     mount) against what's wanted - a wide image on a portrait screen (or
     vice versa) still displays fine via render_fit()'s letterboxing, but
-    looks small and wastes most of the screen. An exactly square image
-    matches either orientation by default (there's no wrong choice for
-    it), unless allow_square is False - then it's rejected like any
-    other mismatch, same retry-and-skip handling."""
-    if image.width == image.height:
+    looks small and wastes most of the screen. "Square" means square-ish
+    (within SQUARE_ISH_RATIO), not just exactly equal dimensions - a real
+    512x508 PC Engine CD cover (ratio 1.008, a jewel-case-style cover)
+    read as square to the eye but passed an exact-equality check as
+    "landscape" by one pixel. A square-ish image matches either
+    orientation by default (there's no wrong choice for it), unless
+    allow_square is False - then it's rejected like any other mismatch,
+    same retry-and-skip handling."""
+    long_side, short_side = max(image.width, image.height), min(image.width, image.height)
+    if short_side == 0 or long_side / short_side < SQUARE_ISH_RATIO:
         return allow_square
     return (image.width > image.height) == want_landscape
 
