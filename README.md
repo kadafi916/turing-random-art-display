@@ -12,11 +12,11 @@ This client has no artwork of its own and does no matching/lookup logic -
 it just asks a running `libretro-artwork-api` instance for
 `GET /random` and displays whatever comes back. That sibling project is
 what actually indexes the libretro-thumbnails data and serves images;
-this repo is only the display-side loop. It needs to be reachable at
-`--server` (default `http://192.168.1.9:8478`) with the `/random`
-endpoint - **not the older releases of that project**, `/random` was
-added specifically to support this client (see that repo's README API
-section).
+this repo is only the display-side loop. Point `--server` (required, no
+default - e.g. `http://192.168.1.100:8478`) at an instance running the
+`/random` endpoint - **not the older releases of that project**,
+`/random` was added specifically to support this client (see that
+repo's README API section).
 
 ## What it does
 
@@ -51,7 +51,7 @@ sudo apt-get install python3-serial python3-numpy python3-pil
 the target machine, then either run it directly:
 
 ```
-python3 random_art_display.py --server http://192.168.1.9:8478 --interval 20
+python3 random_art_display.py --server http://192.168.1.100:8478 --interval 20
 ```
 
 or install it as a systemd service (recommended - survives reboots and
@@ -63,14 +63,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now random-art-display
 ```
 
-Edit the `ExecStart` line in `random-art-display.service` first if your
-`libretro-artwork-api` host/port differs from the default, or if you
-want a different `--interval`/`--system`/`--type`.
+Edit the `ExecStart` line in `random-art-display.service` first -
+`--server` has no default, it needs your actual `libretro-artwork-api`
+host/port - and to set a different `--interval`/`--system`/`--type` if
+you want one.
 
 ## Options
 
 ```
---server URL       libretro-artwork-api base URL (default: http://192.168.1.9:8478)
+--server URL       libretro-artwork-api base URL, e.g. http://192.168.1.100:8478 (required)
 --interval SECONDS seconds between images (default: 20)
 --system NAME       restrict to one SYSTEM_MAP alias (default: any indexed system)
 --type TYPE         boxart|snap|title|logo (default: boxart)
@@ -81,8 +82,8 @@ want a different `--interval`/`--system`/`--type`.
 
 ## Currently deployed
 
-Raspberry Pi 3 (OSMC), `osmc@192.168.1.11`, `/home/osmc/random-art-display/`,
-running as the `random-art-display` systemd service. Logs:
+Raspberry Pi 3 (OSMC), `/home/osmc/random-art-display/`, running as the
+`random-art-display` systemd service. Logs:
 `sudo journalctl -u random-art-display -f`.
 
 ## License

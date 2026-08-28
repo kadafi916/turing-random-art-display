@@ -11,7 +11,7 @@ later vendored library), just with a much simpler poll loop: no game
 identity, no core state, just "show something, wait, show something else".
 
 Run:
-    python3 random_art_display.py --server http://192.168.1.9:8478
+    python3 random_art_display.py --server http://192.168.1.100:8478
 """
 
 import argparse
@@ -73,8 +73,9 @@ def render_fit(image: Image.Image, width: int, height: int) -> Image.Image:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--server", default="http://192.168.1.9:8478",
-                     help="libretro-artwork-api base URL (default: %(default)s)")
+    ap.add_argument("--server", required=True,
+                     help="libretro-artwork-api base URL, e.g. http://192.168.1.100:8478 "
+                          "(required - no default, this varies per network)")
     ap.add_argument("--interval", type=float, default=20.0,
                      help="seconds between images (default: %(default)s)")
     ap.add_argument("--system", default="",
