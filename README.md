@@ -74,7 +74,8 @@ you want one.
 --server URL       libretro-artwork-api base URL, e.g. http://192.168.1.100:8478 (required)
 --interval SECONDS seconds between images (default: 20)
 --system NAME       restrict to one SYSTEM_MAP alias (default: any indexed system)
---type TYPE         boxart|snap|title|logo (default: boxart)
+--type TYPE         boxart|snap|title|logo, a comma-list ("boxart,snap") to pick
+                    randomly among those, or "random" for any of the four (default: boxart)
 --port PORT          serial port (default: AUTO)
 --brightness 0-100    (default: 50)
 --fetch-timeout SECONDS  HTTP timeout (default: 8)

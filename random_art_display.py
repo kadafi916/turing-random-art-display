@@ -32,8 +32,10 @@ BG = (0, 0, 0)
 
 def fetch_random(server: str, system: str, media_type: str, timeout: float):
     """Returns (PIL.Image, label) or (None, reason) on failure. label is
-    "system/filename" from the response headers - only used for logging
-    and same-image dedup, the server doesn't send a game title."""
+    "type: system/filename" from the response headers - only used for
+    logging and same-image dedup, the server doesn't send a game title.
+    The type prefix matters once --type is a list or "random" - the
+    caller otherwise has no way to tell which one it got."""
     params = {"type": media_type}
     if system:
         params["system"] = system
@@ -44,6 +46,7 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
             body = resp.read()
             filename = resp.headers.get("X-Filename", "")
             repo = resp.headers.get("X-System", "")
+            picked_type = resp.headers.get("X-Type", media_type)
     except urllib.error.HTTPError as e:
         return None, f"HTTP {e.code}"
     except Exception as e:
@@ -54,7 +57,7 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
     except Exception as e:
         return None, f"bad image data: {e}"
 
-    return image, f"{repo}/{urllib.parse.unquote(filename)}"
+    return image, f"{picked_type}: {repo}/{urllib.parse.unquote(filename)}"
 
 
 def render_fit(image: Image.Image, width: int, height: int) -> Image.Image:
@@ -80,8 +83,11 @@ def main():
                      help="seconds between images (default: %(default)s)")
     ap.add_argument("--system", default="",
                      help="restrict to one SYSTEM_MAP alias (default: any indexed system)")
-    ap.add_argument("--type", default="boxart", choices=["boxart", "snap", "title", "logo"],
-                     help="artwork type (default: %(default)s)")
+    ap.add_argument("--type", default="boxart",
+                     help="boxart|snap|title|logo, a comma-separated list to pick "
+                          "randomly among ('boxart,snap'), or 'random' for any of the "
+                          "four (default: %(default)s) - passed straight through to "
+                          "the server, which validates it")
     ap.add_argument("--port", default="AUTO", help="serial port (default: auto-detect)")
     ap.add_argument("--brightness", type=int, default=50, help="0-100 (default: %(default)s)")
     ap.add_argument("--fetch-timeout", type=float, default=8.0,
