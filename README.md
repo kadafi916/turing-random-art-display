@@ -76,6 +76,7 @@ you want one.
 --system NAME       restrict to one SYSTEM_MAP alias (default: any indexed system)
 --type TYPE         boxart|snap|title|logo, a comma-list ("boxart,snap") to pick
                     randomly among those, or "random" for any of the four (default: boxart)
+--orientation       landscape|portrait|reverse_landscape|reverse_portrait (default: landscape)
 --port PORT          serial port (default: AUTO)
 --brightness 0-100    (default: 50)
 --fetch-timeout SECONDS  HTTP timeout (default: 8)

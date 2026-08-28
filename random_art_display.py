@@ -88,6 +88,9 @@ def main():
                           "randomly among ('boxart,snap'), or 'random' for any of the "
                           "four (default: %(default)s) - passed straight through to "
                           "the server, which validates it")
+    ap.add_argument("--orientation", default="landscape",
+                     choices=["landscape", "portrait", "reverse_landscape", "reverse_portrait"],
+                     help="physical mount orientation (default: %(default)s)")
     ap.add_argument("--port", default="AUTO", help="serial port (default: auto-detect)")
     ap.add_argument("--brightness", type=int, default=50, help="0-100 (default: %(default)s)")
     ap.add_argument("--fetch-timeout", type=float, default=8.0,
@@ -98,7 +101,7 @@ def main():
     comm.InitializeComm()
     comm.SetBrightness(args.brightness)
     comm.Clear()
-    comm.SetOrientation(Orientation.LANDSCAPE)
+    comm.SetOrientation(Orientation[args.orientation.upper()])
     width, height = comm.get_width(), comm.get_height()
     logger.info("Display ready: %dx%d", width, height)
 
