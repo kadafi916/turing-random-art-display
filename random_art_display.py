@@ -60,7 +60,7 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
     return image, f"{picked_type}: {repo}/{urllib.parse.unquote(filename)}"
 
 
-MAX_ORIENTATION_RETRIES = 8
+MAX_ORIENTATION_RETRIES = 25
 
 
 SQUARE_ISH_RATIO = 1.1  # long side / short side below this counts as "square" too
