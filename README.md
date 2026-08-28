@@ -80,6 +80,10 @@ you want one.
 --type TYPE         boxart|snap|title|logo, a comma-list ("boxart,snap") to pick
                     randomly among those, or "random" for any of the four (default: boxart)
 --orientation       landscape|portrait|reverse_landscape|reverse_portrait (default: landscape)
+--allow-square-images / --no-allow-square-images
+                    whether an exactly-square image counts as matching either
+                    orientation, or gets rejected/retried like any other shape
+                    mismatch (default: allow)
 --port PORT          serial port (default: AUTO)
 --brightness 0-100    (default: 50)
 --fetch-timeout SECONDS  HTTP timeout (default: 8)

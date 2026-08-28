@@ -63,18 +63,21 @@ def fetch_random(server: str, system: str, media_type: str, timeout: float):
 MAX_ORIENTATION_RETRIES = 8
 
 
-def shape_matches(image: Image.Image, want_landscape: bool) -> bool:
+def shape_matches(image: Image.Image, want_landscape: bool, allow_square: bool = True) -> bool:
     """Compares the image's own pixel shape (not the screen's physical
     mount) against what's wanted - a wide image on a portrait screen (or
     vice versa) still displays fine via render_fit()'s letterboxing, but
     looks small and wastes most of the screen. An exactly square image
-    matches either orientation, since there's no wrong choice for it."""
+    matches either orientation by default (there's no wrong choice for
+    it), unless allow_square is False - then it's rejected like any
+    other mismatch, same retry-and-skip handling."""
     if image.width == image.height:
-        return True
+        return allow_square
     return (image.width > image.height) == want_landscape
 
 
-def fetch_matching(server: str, system: str, media_type: str, timeout: float, want_landscape: bool):
+def fetch_matching(server: str, system: str, media_type: str, timeout: float,
+                    want_landscape: bool, allow_square: bool = True):
     """Like fetch_random(), but discards a shape-mismatched image and
     tries again, up to MAX_ORIENTATION_RETRIES times. Box art in
     particular skews heavily portrait (mimics a physical cover), so a
@@ -86,7 +89,7 @@ def fetch_matching(server: str, system: str, media_type: str, timeout: float, wa
         image, label = fetch_random(server, system, media_type, timeout)
         if image is None:
             return None, label
-        if shape_matches(image, want_landscape):
+        if shape_matches(image, want_landscape, allow_square):
             return image, label
         logger.debug("Wrong shape for this orientation (%s), retrying (%d/%d)",
                      label, attempt, MAX_ORIENTATION_RETRIES)
@@ -125,6 +128,10 @@ def main():
     ap.add_argument("--orientation", default="landscape",
                      choices=["landscape", "portrait", "reverse_landscape", "reverse_portrait"],
                      help="physical mount orientation (default: %(default)s)")
+    ap.add_argument("--allow-square-images", action=argparse.BooleanOptionalAction, default=True,
+                     help="whether an exactly-square image counts as matching either "
+                          "orientation, or gets rejected/retried like any other shape "
+                          "mismatch (default: %(default)s)")
     ap.add_argument("--port", default="AUTO", help="serial port (default: auto-detect)")
     ap.add_argument("--brightness", type=int, default=50, help="0-100 (default: %(default)s)")
     ap.add_argument("--fetch-timeout", type=float, default=8.0,
@@ -144,8 +151,8 @@ def main():
     last_label = None
     try:
         while True:
-            image, label = fetch_matching(args.server, args.system, args.type,
-                                          args.fetch_timeout, want_landscape)
+            image, label = fetch_matching(args.server, args.system, args.type, args.fetch_timeout,
+                                          want_landscape, args.allow_square_images)
             if image is None:
                 logger.warning("Fetch failed (%s), retrying in %.0fs", label, args.interval)
             elif label == last_label:
