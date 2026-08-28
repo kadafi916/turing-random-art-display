@@ -90,6 +90,57 @@ you want one.
 --fetch-timeout SECONDS  HTTP timeout (default: 8)
 ```
 
+## Box art shape by system
+
+Measured directly (2026-08-28) rather than guessed from memory of
+physical packaging conventions, which vary by region/scan and turned
+out to be wrong in at least one case (Genesis reads as 99.9% portrait
+here, not landscape as commonly assumed). Method: read every PNG's
+width/height from its header (no decode needed) for each system's
+`Named_Boxarts/`, bucket each as landscape (`ratio > 1.1`), portrait
+(`ratio < 1/1.1`), or square-ish, same threshold `random_art_display.py`
+itself uses. "Dominant" below means whichever bucket has the plurality.
+
+| System | alias | n | landscape | portrait | square | dominant |
+| --- | --- | --- | --- | --- | --- | --- |
+| Nintendo 64DD | *(none - see below)* | 28 | 27 | 1 | 0 | **landscape (96%)** |
+| Nintendo 64 | `n64` | 1115 | 808 | 307 | 0 | **landscape (72%)** |
+| SNES | `snes` | 3701 | 2156 | 1542 | 3 | **landscape (58%)** |
+| Sega CD/Mega-CD | `megacd` | 609 | 175 | 297 | 137 | portrait (weak plurality, genuinely mixed) |
+| Game Boy Advance | `gba` | 5958 | 1479 | 2572 | 1907 | portrait (weak plurality, genuinely mixed) |
+| 3DO | `3do` | 652 | 100 | 360 | 192 | portrait |
+| NES | `nes` | 13438 | 3307 | 10049 | 82 | portrait |
+| Neo Geo | `neogeo` | 257 | 18 | 237 | 2 | portrait |
+| Sega 32X | `s32x` | 208 | 8 | 200 | 0 | portrait |
+| Atari Lynx | `atarilynx` | 97 | 1 | 96 | 0 | portrait |
+| WonderSwan | `wonderswan` | 299 | 4 | 295 | 0 | portrait |
+| WonderSwan Color | `wonderswancolor` | 239 | 2 | 237 | 0 | portrait |
+| Game Gear | `gg` | 605 | 3 | 602 | 0 | portrait |
+| Master System | `mastersystem` | 560 | 2 | 558 | 0 | portrait |
+| Genesis/Mega Drive | `genesis` | 2354 | 2 | 2352 | 0 | portrait |
+| Sega SG-1000 | *(none - see below)* | 141 | 0 | 141 | 0 | portrait (100%) |
+| Saturn | `saturn` | 2296 | 85 | 991 | 1220 | square |
+| PlayStation | `psx` | 9347 | 530 | 55 | 8762 | square |
+| Game Boy Color | `gbc` | 1522 | 74 | 463 | 985 | square |
+| Game Boy | `gb` | 1645 | 32 | 597 | 1016 | square |
+| Family Computer Disk System | `fds` | 396 | 4 | 94 | 298 | square |
+| PC Engine/TurboGrafx-16 | `tgfx16` | 479 | 26 | 9 | 444 | square |
+| PC Engine CD | *(none - see below)* | 946 | 49 | 20 | 877 | square |
+| Neo Geo CD | *(none - see below)* | 216 | 0 | 1 | 215 | square |
+| MAME (arcade) | `arcade` | 6068 | 319 | 5722 | 27 | portrait, but flyers/mixed - not comparable to real console box art |
+
+**`Nintendo_-_Nintendo_64DD`, `Sega_-_SG-1000`, `NEC_-_PC_Engine_CD_-_TurboGrafx-CD`,
+and `SNK_-_Neo_Geo_CD` have no `SYSTEM_MAP` alias** (see `libretro-artwork-api`'s
+own comment on why - they have no MiSTer `core_raw` of their own to route
+through, so an alias was deliberately never guessed at) - not usable in
+`--system`/`--exclude-system` today even though they're indexed. N64DD in
+particular is the single strongest landscape system measured (96%) but
+can't currently be selected.
+
+**Landscape config** (`--system n64,snes`): both are genuinely
+landscape-majority, not just landscape-present - combined pool is 62%
+landscape, comfortably within `MAX_ORIENTATION_RETRIES`.
+
 ## Currently deployed
 
 Raspberry Pi 3 (OSMC), `/home/osmc/random-art-display/`, running as the

@@ -14,7 +14,7 @@ Wants=network-online.target
 Type=simple
 User=osmc
 WorkingDirectory=/home/osmc/random-art-display
-ExecStart=/usr/bin/python3 /home/osmc/random-art-display/random_art_display.py --server http://192.168.1.100:8478 --interval 20 --type boxart --orientation landscape --no-allow-square-images
+ExecStart=/usr/bin/python3 /home/osmc/random-art-display/random_art_display.py --server http://192.168.1.100:8478 --interval 20 --type boxart --system n64,snes --orientation landscape --no-allow-square-images
 Restart=always
 RestartSec=3
 
